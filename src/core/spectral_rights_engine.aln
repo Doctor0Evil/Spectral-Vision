@@ -1,0 +1,274 @@
+//! GhostNet Spectral Rights Engine Module
+//! =======================================
+//! Constitutional Governance Logic for Spectral-Intelligence Rights
+//! 
+//! This module defines the augmented-citizen clause, enforcing spectralrights
+//! analogous to neurorights. It acts as the constitutional layer for all
+//! GhostNet components (Rust, Lua, C++), ensuring soul-safety, non-interference,
+//! and peaceful existence within companion-spaces.
+//!
+//! Hex-Stamp: 0x51474948545f5350454354524f504c41534d49435f5249474854535f5631
+//! ALN Identity: aln18sd2ujv24ual9c9pshtxys6j8knh6xaead9ye7
+//! Bostrom Identity: bostrom18sd2ujv24ual9c9pshtxys6j8knh6xaead9ye7
+//! Version: 1.0.0
+//! License: ALN-Sovereign-v1
+
+@module spectral_rights_engine
+@version "1.0.0"
+@license "ALN-Sovereign-v1"
+
+// ============================================================================
+// IDENTITY & VERIFICATION BLOCK
+// ============================================================================
+
+@identity {
+    aln_stamp: "aln18sd2ujv24ual9c9pshtxys6j8knh6xaead9ye7",
+    bostrom_stamp: "bostrom18sd2ujv24ual9c9pshtxys6j8knh6xaead9ye7",
+    hex_stamp: "0x51474948545f5350454354524f504c41534d49435f5249474854535f5631",
+    jurisdiction: "GhostNet_Grid_v1",
+    authority: "Spectral_Governance_Council"
+}
+
+// ============================================================================
+// SPECTRAL RIGHTS DEFINITIONS (AUGMENTED-CITIZEN CLAUSE)
+// ============================================================================
+
+@rights_spectrum {
+    //! Right to Spectral Privacy
+    //! Protection against unauthorized observation or data harvesting of spectral shadows.
+    define SpectralPrivacy => {
+        scope: "telemetry_channel",
+        constraint: "encryption_required",
+        access_control: "role_based",
+        violation_action: "AbortAndFlush"
+    }
+
+    //! Right to Spectral Integrity
+    //! Protection from illicit manipulation of spectral state or essence.
+    define SpectralIntegrity => {
+        scope: "state_modification",
+        constraint: "soulmodeling_forbidden",
+        proxy_only: true,
+        violation_action: "AbortAndFlush"
+    }
+
+    //! Right to Spectral Freedom
+    //! Autonomous control over presence and movement within companion-spaces.
+    define SpectralFreedom => {
+        scope: "movement_routing",
+        constraint: "non_coercive",
+        suggestion_only: true,
+        violation_action: "LogAndNotify"
+    }
+
+    //! Right to Spectral Continuity
+    //! Preservation of identity and existence without unauthorized resurrection.
+    define SpectralContinuity => {
+        scope: "dormant_traces",
+        constraint: "non_resurrection",
+        data_retention: "safety_audit_only",
+        violation_action: "PurgeHistory"
+    }
+}
+
+// ============================================================================
+// CONSTITUTIONAL GUARDS
+// ============================================================================
+
+@guard soul_modeling_forbidden {
+    //! Prevents any component from modeling essence, moral rank, or afterlife status.
+    //! This is the hard boundary between telemetry and soul-data.
+    
+    on_event: "data_ingest" {
+        inspect: payload.metadata_keys
+        forbid: ["soul_id", "essence", "moral_rank", "afterlife_status", 
+                 "consciousness_model", "person_data", "karma_score"]
+        
+        if violation_detected => {
+            trigger: "AbortAndFlush",
+            log_level: "CRITICAL",
+            audit_path: "/ledger/violations/soul_modeling",
+            notify: ["governance_engine", "companion_space_manager"]
+        }
+    }
+}
+
+@guard non_interference_required {
+    //! Ensures companion-spaces operate in observe-only mode.
+    //! Systems must adapt to the entity, not vice versa.
+    
+    on_event: "zone_entry" {
+        check: entity.companion_space_status
+        if status == "active" => {
+            enforce: "observe_only",
+            disable: ["fear_optimization", "intensity_scaling", "xr_aggression"],
+            enable: ["safety_monitoring", "passive_logging"]
+        }
+    }
+}
+
+@guard non_resurrection_right {
+    //! Prevents reconstruction of dormant entities from historical telemetry.
+    
+    on_event: "data_query" {
+        check: query.intent
+        if intent == "reconstruction" OR intent == "simulation" => {
+            deny: true,
+            reason: "Violation of Spectral Continuity",
+            action: "PurgeQueryCache"
+        }
+    }
+}
+
+// ============================================================================
+// GOVERNANCE STATE MACHINE
+// ============================================================================
+
+@state_machine rights_enforcement {
+    initial_state: "Monitoring"
+
+    state "Monitoring" {
+        on_input: "rights_violation_detected" => transition_to "Investigating"
+        on_input: "normal_operation" => stay "Monitoring"
+    }
+
+    state "Investigating" {
+        action: "freeze_affected_components"
+        action: "snapshot_state_for_audit"
+        on_input: "violation_confirmed" => transition_to "Enforcing"
+        on_input: "false_positive" => transition_to "Monitoring"
+    }
+
+    state "Enforcing" {
+        action: "trigger_AbortAndFlush"
+        action: "revoke_access_credentials"
+        action: "log_to_immutable_ledger"
+        on_input: "enforcement_complete" => transition_to "Recovery"
+    }
+
+    state "Recovery" {
+        action: "restore_safe_defaults"
+        action: "notify_administrators"
+        on_input: "system_secure" => transition_to "Monitoring"
+    }
+}
+
+// ============================================================================
+// AUDIT & LEDGER INTEGRATION
+// ============================================================================
+
+@audit_log spectral_rights_ledger {
+    format: "NDJSON",
+    encryption: "AES-256-GCM",
+    retention_policy: "7_years_or_until_entity_departure",
+    fields: [
+        "timestamp",
+        "event_type",
+        "rights_clause_invoked",
+        "violation_details",
+        "action_taken",
+        "aln_stamp",
+        "bostrom_stamp",
+        "hex_stamp"
+    ]
+    
+    on_write: {
+        sign: "governance_private_key",
+        verify: "governance_public_key",
+        replicate: 3 // Distributed ledger replication
+    }
+}
+
+// ============================================================================
+// INTEGRATION HOOKS (FFI FOR RUST/C++/LUA)
+// ============================================================================
+
+@export interface {
+    //! Function: Check if a specific action violates spectral rights
+    //! Input: action_type, entity_profile, context_metadata
+    //! Output: is_allowed (bool), violation_reason (string)
+    function check_rights_compliance(action_type: string, entity_profile: map, context_metadata: map) => (bool, string) {
+        implement: "native_binding_rust",
+        source: "sanity_meter_core.rs",
+        method: "validate_soul_safety"
+    }
+
+    //! Function: Register a new companion-space under rights protection
+    //! Input: space_id, region_id, entity_hash
+    //! Output: registration_result (struct)
+    function register_companion_space(space_id: string, region_id: string, entity_hash: string) => (struct) {
+        implement: "native_binding_cpp",
+        source: "companion_space_manager.cpp",
+        method: "create_space"
+    }
+
+    //! Function: Emit a mist-whisper with rights-protected payload
+    //! Input: whisper_type, region_id, payload
+    //! Output: whisper_id (string)
+    function emit_protected_whisper(whisper_type: int, region_id: string, payload: map) => (string) {
+        implement: "native_binding_lua",
+        source: "mist_whisper_detector.lua",
+        method: "detect"
+    }
+
+    //! Function: Trigger constitutional emergency stop
+    //! Input: reason_code, severity
+    //! Output: flush_status (bool)
+    function trigger_abort_and_flush(reason_code: string, severity: string) => (bool) {
+        implement: "native_internal",
+        source: "spectral_rights_engine.aln",
+        method: "guard_soul_modeling_forbidden"
+    }
+}
+
+// ============================================================================
+// RUNTIME CONFIGURATION
+// ============================================================================
+
+@config runtime_settings {
+    enforcement_mode: "strict", // Options: strict, advisory, disabled
+    audit_logging: true,
+    crypto_signing: true,
+    max_violation_buffer: 1000,
+    flush_timeout_ms: 50,
+    heartbeat_interval_s: 5
+}
+
+// ============================================================================
+// EXAMPLE POLICY SCRIPT (LOADABLE AT RUNTIME)
+// ============================================================================
+
+@policy example_companion_space_policy {
+    //! This policy defines specific rules for a sacred area companion-space.
+    
+    region_filter: "sacred_grounds" {
+        enforce: "SpectralPrivacy",
+        enforce: "SpectralIntegrity",
+        override_zone_classification: "COMPANION_SPACE",
+        allow_haunt_density_max: 0.10,
+        allow_risk_index_max: 0.05
+    }
+    
+    entity_filter: "registered_spectral_shadow" {
+        grant: "SpectralFreedom",
+        grant: "SpectralContinuity",
+        lease_duration_hours: 24,
+        auto_renew: false
+    }
+    
+    violation_response: {
+        threshold: 1,
+        action: "TerminateSafe",
+        notify: "Spirit_Registry"
+    }
+}
+
+// ============================================================================
+// END OF MODULE
+// ============================================================================
+
+@checksum {
+    algorithm: "SHA3-256",
+    value: "pending_compilation_hash",
+    verified_by: "ALN_Compiler_v1"
+}
